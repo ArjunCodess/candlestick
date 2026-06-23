@@ -5,8 +5,23 @@ import { useScroll } from "@/hooks/use-scroll"
 import { Button } from "@/components/ui/button"
 import { MobileNav } from "@/components/mobile-nav"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ChartCandlestickIcon } from "@hugeicons/core-free-icons"
+import {
+  ChartCandlestickIcon,
+  Logout03Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { authClient } from "@/lib/auth-client"
 
 export const navLinks = [
   {
@@ -45,9 +60,9 @@ export function Header() {
           scrolled,
       })}
     >
-      <nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
+      <nav className="mx-auto grid h-14 w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center px-4">
         <Logo />
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 justify-self-center md:flex">
           {navLinks.map((link) => (
             <Button
               key={link.label}
@@ -60,8 +75,76 @@ export function Header() {
             </Button>
           ))}
         </div>
-        <MobileNav />
+        <div className="flex items-center gap-2 justify-self-end">
+          <MobileNav />
+          <UserMenu />
+        </div>
       </nav>
     </header>
   )
+}
+
+function UserMenu() {
+  const router = useRouter()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+  const fallback = getInitials(user?.name ?? user?.email)
+
+  async function onLogout() {
+    await authClient.signOut()
+    router.push("/sign-in")
+    router.refresh()
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Open account menu"
+            className="rounded-full border-border p-0"
+            size="icon"
+            variant="ghost"
+          />
+        }
+      >
+        <Avatar size="sm">
+          {user?.image && <AvatarImage src={user.image} alt={user.name ?? ""} />}
+          <AvatarFallback>{fallback}</AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={8}>
+        <DropdownMenuGroup>
+          <DropdownMenuItem render={<Link href="/settings" />}>
+            <HugeiconsIcon icon={Settings01Icon} strokeWidth={2} />
+            Settings
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={onLogout} variant="destructive">
+            <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function getInitials(value?: string | null) {
+  if (!value) {
+    return "CS"
+  }
+
+  const parts = value
+    .replace(/@.*/, "")
+    .split(/\s+/)
+    .filter(Boolean)
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
 }
