@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { useScroll } from "@/hooks/use-scroll"
 import { Button } from "@/components/ui/button"
 import { MobileNav } from "@/components/mobile-nav"
+import { StockSearch } from "@/components/stock-search"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -27,10 +28,6 @@ export const navLinks = [
   {
     label: "Dashboard",
     href: "/dashboard",
-  },
-  {
-    label: "Search",
-    href: "/search",
   },
   {
     label: "Waitlist",
@@ -74,6 +71,7 @@ export function Header() {
               {link.label}
             </Button>
           ))}
+          <StockSearch />
         </div>
         <div className="flex items-center gap-2 justify-self-end">
           <MobileNav />
