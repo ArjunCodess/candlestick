@@ -255,3 +255,32 @@ export function getStockWidgets(symbol: string) {
     },
   }
 }
+
+export function getMiniChartWidget(symbol: string) {
+  return {
+    title: symbol,
+    scriptUrl: tradingViewWidgetScript("embed-widget-mini-symbol-overview.js"),
+    config: {
+      ...tradingViewDarkConfig,
+      ...tradingViewFullSizeConfig,
+      symbol,
+      dateRange: "12M",
+      noTimeScale: false,
+      chartOnly: false,
+      isTransparent: false,
+      autosize: false,
+      largeChartUrl: `/stock/${encodeURIComponent(symbol)}`,
+    },
+  }
+}
+
+export const navLinks = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+  },
+  {
+    label: "Watchlist",
+    href: "/watchlist",
+  },
+]

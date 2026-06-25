@@ -5,6 +5,7 @@ import { useScroll } from "@/hooks/use-scroll"
 import { Button } from "@/components/ui/button"
 import { MobileNav } from "@/components/mobile-nav"
 import { StockSearch } from "@/components/stock-search"
+import { navLinks } from "@/lib/constants"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -24,22 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { authClient } from "@/lib/auth-client"
 
-export const navLinks = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-  },
-  {
-    label: "Waitlist",
-    href: "/waitlist",
-  },
-]
-
 function Logo() {
   return (
     <Link
       href="/"
-      className="text-primary flex items-center gap-2 text-sm font-semibold tracking-widest uppercase"
+      className="flex items-center gap-2 text-sm font-semibold tracking-widest text-primary uppercase"
     >
       <HugeiconsIcon icon={ChartCandlestickIcon} strokeWidth={1.5} />
       <span>Candlestick</span>
@@ -65,11 +55,9 @@ export function Header() {
               key={link.label}
               size="sm"
               variant="ghost"
-              render={<a href={link.href} />}
+              render={<Link href={link.href}>{link.label}</Link>}
               nativeButton={false}
-            >
-              {link.label}
-            </Button>
+            />
           ))}
           <StockSearch />
         </div>
@@ -107,7 +95,9 @@ function UserMenu() {
         }
       >
         <Avatar size="sm">
-          {user?.image && <AvatarImage src={user.image} alt={user.name ?? ""} />}
+          {user?.image && (
+            <AvatarImage src={user.image} alt={user.name ?? ""} />
+          )}
           <AvatarFallback>{fallback}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -135,10 +125,7 @@ function getInitials(value?: string | null) {
     return "CS"
   }
 
-  const parts = value
-    .replace(/@.*/, "")
-    .split(/\s+/)
-    .filter(Boolean)
+  const parts = value.replace(/@.*/, "").split(/\s+/).filter(Boolean)
 
   return parts
     .slice(0, 2)

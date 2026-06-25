@@ -2,7 +2,8 @@ import { cn } from "@/lib/utils"
 import React from "react"
 import { Button } from "@/components/ui/button"
 import { Portal, PortalBackdrop } from "@/components/portal"
-import { navLinks } from "@/components/header"
+import { navLinks } from "@/lib/constants"
+import Link from "next/link"
 import { StockSearch } from "@/components/stock-search"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon, Menu01Icon } from "@hugeicons/core-free-icons"
@@ -51,11 +52,9 @@ export function MobileNav() {
                   className="justify-start"
                   key={link.label}
                   variant="ghost"
-                  render={<a href={link.href} />}
+                  render={<Link href={link.href}>{link.label}</Link>}
                   nativeButton={false}
-                >
-                  {link.label}
-                </Button>
+                />
               ))}
               <StockSearch className="w-full" onOpen={() => setOpen(true)} />
             </div>
