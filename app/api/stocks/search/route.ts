@@ -7,46 +7,7 @@ type FinnhubSymbol = {
   type?: string
 }
 
-type FinnhubCompanyProfile = {
-  exchange?: string
-  finnhubIndustry?: string
-  name?: string
-  ticker?: string
-}
-
-type StockSearchResult = {
-  exchange: string
-  industry: string
-  name: string
-  sector: string
-  ticker: string
-  type: string
-}
-
-async function getCompanyProfile(symbol: string, token: string) {
-  const profileUrl = new URL("https://finnhub.io/api/v1/stock/profile2")
-  profileUrl.searchParams.set("symbol", symbol)
-
-  const response = await fetch(profileUrl, {
-    headers: {
-      Accept: "application/json",
-      "X-Finnhub-Token": token,
-    },
-    next: { revalidate: 60 * 60 },
-  })
-
-  if (!response.ok) {
-    return null
-  }
-
-  const profile = (await response.json()) as FinnhubCompanyProfile
-
-  if (!profile.ticker && !profile.name && !profile.exchange) {
-    return null
-  }
-
-  return profile
-}
+const RESULT_LIMIT = 8
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -64,57 +25,53 @@ export async function GET(request: Request) {
     )
   }
 
-  const finnhubUrl = new URL("https://finnhub.io/api/v1/search")
-  finnhubUrl.searchParams.set("q", query)
+  const url = new URL("https://finnhub.io/api/v1/search")
+  url.searchParams.set("q", query)
 
-  try {
-    const response = await fetch(finnhubUrl, {
-      headers: {
-        Accept: "application/json",
-        "X-Finnhub-Token": token,
-      },
-      next: { revalidate: 60 },
-    })
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "X-Finnhub-Token": token,
+    },
+    next: { revalidate: 60 },
+  })
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Unable to search stocks.", results: [] },
-        { status: 502 }
-      )
-    }
-
-    const data = (await response.json()) as { result?: FinnhubSymbol[] }
-    const stocks = (data.result ?? [])
-      .filter((stock) => {
-        return stock.symbol && stock.description
-      })
-      .slice(0, 6)
-
-    const results = await Promise.all(
-      stocks.map(async (stock) => {
-        const symbol = stock.symbol ?? ""
-        const profile = await getCompanyProfile(symbol, token)
-
-        return {
-          exchange:
-            profile?.exchange ??
-            (stock.displaySymbol === stock.symbol
-              ? "Exchange unavailable"
-              : (stock.displaySymbol ?? "Exchange unavailable")),
-          industry: profile?.finnhubIndustry ?? "",
-          name: profile?.name ?? stock.description ?? symbol,
-          sector: "",
-          ticker: symbol,
-          type: stock.type ?? "Stock",
-        } satisfies StockSearchResult
-      })
-    )
-
-    return NextResponse.json({ results })
-  } catch {
+  if (!response.ok) {
     return NextResponse.json(
       { error: "Unable to search stocks.", results: [] },
       { status: 502 }
     )
   }
+
+  const data = (await response.json()) as { result?: FinnhubSymbol[] }
+  const seenTickers = new Set<string>()
+  const results = []
+
+  for (const stock of data.result ?? []) {
+    if (!stock.symbol) {
+      continue
+    }
+
+    const ticker = (stock.symbol ?? stock.displaySymbol ?? "").split(".")[0]
+
+    if (seenTickers.has(ticker)) {
+      continue
+    }
+
+    seenTickers.add(ticker)
+    results.push({
+      exchange: stock.type ?? "",
+      industry: "",
+      name: stock.description ?? ticker,
+      sector: "",
+      ticker,
+      type: stock.type ?? "",
+    })
+
+    if (results.length === RESULT_LIMIT) {
+      break
+    }
+  }
+
+  return NextResponse.json({ results })
 }
