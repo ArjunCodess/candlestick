@@ -25,7 +25,7 @@ export function TvWidget({
     <section
       aria-label={title}
       className={cn(
-        "flex min-h-130 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground",
+        "flex min-h-130 flex-col overflow-hidden border border-border bg-card text-card-foreground",
         className
       )}
     >

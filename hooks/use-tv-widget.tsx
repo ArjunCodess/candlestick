@@ -30,7 +30,7 @@ export function useTvWidget({ scriptUrl, config }: UseTvWidgetOptions) {
     script.src = scriptUrl
     script.type = "text/javascript"
     script.async = true
-    script.innerHTML = configString
+    script.textContent = configString
     container.appendChild(script)
 
     return () => {
