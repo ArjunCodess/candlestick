@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm"
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  primaryKey,
+} from "drizzle-orm/pg-core"
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -73,9 +80,33 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
 
+export const stock = pgTable("stock", {
+  symbol: text("symbol").primaryKey(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+export const watchlist = pgTable(
+  "watchlist",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    stockSymbol: text("stock_symbol")
+      .notNull()
+      .references(() => stock.symbol, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.stockSymbol] }),
+    index("watchlist_userId_idx").on(table.userId),
+    index("watchlist_stockSymbol_idx").on(table.stockSymbol),
+  ]
+)
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  watchlist: many(watchlist),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -89,5 +120,20 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
+  }),
+}))
+
+export const stockRelations = relations(stock, ({ many }) => ({
+  watchlist: many(watchlist),
+}))
+
+export const watchlistRelations = relations(watchlist, ({ one }) => ({
+  user: one(user, {
+    fields: [watchlist.userId],
+    references: [user.id],
+  }),
+  stock: one(stock, {
+    fields: [watchlist.stockSymbol],
+    references: [stock.symbol],
   }),
 }))
