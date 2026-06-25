@@ -1,3 +1,4 @@
+import { isStockWatchlisted } from "@/actions/watchlist"
 import { TvWidget } from "@/components/tv-widget"
 import WatchlistButton from "@/components/watchlist-button"
 import { getStockWidgets, normalizeStockSymbol } from "@/lib/constants"
@@ -10,6 +11,7 @@ type StockPageProps = {
 
 export default async function StockPage({ params }: StockPageProps) {
   const symbol = normalizeStockSymbol((await params).symbol)
+  const isWatchlisted = await isStockWatchlisted(symbol)
   const widgets = getStockWidgets(symbol)
 
   return (
@@ -20,7 +22,7 @@ export default async function StockPage({ params }: StockPageProps) {
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4">
-        <WatchlistButton />
+        <WatchlistButton symbol={symbol} isWatchlisted={isWatchlisted} />
         <TvWidget {...widgets.technicalAnalysis} className="min-h-112" />
         <TvWidget {...widgets.fundamentalData} className="min-h-112" />
         <TvWidget {...widgets.companyProfile} className="min-h-112" />
