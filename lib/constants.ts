@@ -269,7 +269,7 @@ export function getMiniChartWidget(symbol: string) {
       chartOnly: false,
       isTransparent: false,
       autosize: false,
-      largeChartUrl: `/stock/${encodeURIComponent(symbol)}`,
+      largeChartUrl: "",
     },
   }
 }

@@ -1,7 +1,6 @@
 import { getWatchlistedStocks } from "@/actions/watchlist"
 import { StockSearch } from "@/components/stock-search"
-import { TvWidget } from "@/components/tv-widget"
-import { getMiniChartWidget } from "@/lib/constants"
+import { WatchlistCard } from "@/components/watchlist-card"
 
 export default async function WatchlistPage() {
   const stocks = await getWatchlistedStocks()
@@ -21,11 +20,7 @@ export default async function WatchlistPage() {
       {stocks.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {stocks.map(({ symbol }) => (
-            <TvWidget
-              key={symbol}
-              {...getMiniChartWidget(symbol)}
-              className="min-h-64"
-            />
+            <WatchlistCard key={symbol} symbol={symbol} />
           ))}
         </div>
       ) : (
