@@ -1,3 +1,24 @@
+import type { TradingViewWidgetConfig } from "@/hooks/use-tv-widget"
+
+const tradingViewWidgetBaseUrl = "https://s3.tradingview.com/external-embedding"
+
+const tradingViewWidgetHost = "https://www.tradingview.com"
+
+const tradingViewDarkConfig = {
+  colorTheme: "dark",
+  isTransparent: false,
+  locale: "en",
+} satisfies TradingViewWidgetConfig
+
+const tradingViewFullSizeConfig = {
+  width: "100%",
+  height: "100%",
+} satisfies TradingViewWidgetConfig
+
+function tradingViewWidgetScript(fileName: string) {
+  return `${tradingViewWidgetBaseUrl}/${fileName}`
+}
+
 const marketOverviewConfig = {
   colorTheme: "dark",
   dateRange: "12M",
@@ -143,26 +164,94 @@ const marketDataConfig = {
 export const widgets = [
   {
     title: "Market Overview",
-    scriptUrl:
-      "https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js",
+    scriptUrl: tradingViewWidgetScript("embed-widget-market-overview.js"),
     config: marketOverviewConfig,
   },
   {
     title: "Stock Heatmap",
-    scriptUrl:
-      "https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js",
+    scriptUrl: tradingViewWidgetScript("embed-widget-stock-heatmap.js"),
     config: stockHeatmapConfig,
   },
   {
     title: "Top Stories",
-    scriptUrl:
-      "https://s3.tradingview.com/external-embedding/embed-widget-timeline.js",
+    scriptUrl: tradingViewWidgetScript("embed-widget-timeline.js"),
     config: topStoriesConfig,
   },
   {
     title: "Market Data",
-    scriptUrl:
-      "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
+    scriptUrl: tradingViewWidgetScript("embed-widget-market-quotes.js"),
     config: marketDataConfig,
   },
 ]
+
+export function normalizeStockSymbol(symbol: string) {
+  const normalizedSymbol = decodeURIComponent(symbol)
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9:._!-]/g, "")
+
+  return normalizedSymbol
+}
+
+export function getStockWidgets(symbol: string) {
+  return {
+    symbolInfo: {
+      title: `${symbol} Snapshot`,
+      scriptUrl: tradingViewWidgetScript("embed-widget-symbol-info.js"),
+      config: {
+        ...tradingViewDarkConfig,
+        symbol,
+        width: "100%",
+      },
+    },
+    advancedChart: {
+      title: `${symbol} Advanced Chart`,
+      scriptUrl: tradingViewWidgetScript("embed-widget-advanced-chart.js"),
+      config: {
+        autosize: true,
+        symbol,
+        interval: "D",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        enable_publishing: false,
+        allow_symbol_change: true,
+        calendar: false,
+        support_host: tradingViewWidgetHost,
+      },
+    },
+    fundamentalData: {
+      title: "Fundamental Data",
+      scriptUrl: tradingViewWidgetScript("embed-widget-financials.js"),
+      config: {
+        ...tradingViewDarkConfig,
+        ...tradingViewFullSizeConfig,
+        symbol,
+        largeChartUrl: "",
+        displayMode: "regular",
+      },
+    },
+    technicalAnalysis: {
+      title: "Technical Analysis",
+      scriptUrl: tradingViewWidgetScript("embed-widget-technical-analysis.js"),
+      config: {
+        ...tradingViewDarkConfig,
+        ...tradingViewFullSizeConfig,
+        interval: "1m",
+        symbol,
+        showIntervalTabs: true,
+        displayMode: "single",
+      },
+    },
+    companyProfile: {
+      title: "Company Profile",
+      scriptUrl: tradingViewWidgetScript("embed-widget-symbol-profile.js"),
+      config: {
+        ...tradingViewDarkConfig,
+        ...tradingViewFullSizeConfig,
+        symbol,
+      },
+    },
+  }
+}
