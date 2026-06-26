@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import { isStockWatchlisted } from "@/actions/watchlist"
 import { TvWidget } from "@/components/tv-widget"
 import WatchlistButton from "@/components/watchlist-button"
@@ -7,6 +9,17 @@ type StockPageProps = {
   params: Promise<{
     symbol: string
   }>
+}
+
+export async function generateMetadata({
+  params,
+}: StockPageProps): Promise<Metadata> {
+  const symbol = normalizeStockSymbol((await params).symbol)
+
+  return {
+    title: `${symbol} Stock`,
+    description: `View ${symbol} charts, technical analysis, fundamentals, and company profile in Candlestick.`,
+  }
 }
 
 export default async function StockPage({ params }: StockPageProps) {

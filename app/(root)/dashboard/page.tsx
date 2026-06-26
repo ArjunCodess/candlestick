@@ -1,8 +1,16 @@
+import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { TvWidget } from "@/components/tv-widget"
 import { auth } from "@/lib/auth"
 import { widgets } from "@/lib/constants"
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Monitor market widgets, charts, technical analysis, and top market data in Candlestick.",
+}
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({

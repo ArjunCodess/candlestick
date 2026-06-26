@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import { getPriceAlerts } from "@/actions/alerts"
 import { AlertManager, type AlertCardItem } from "@/components/alert-manager"
 import {
@@ -11,6 +13,12 @@ import {
   getStockProfile,
   getStockQuote,
 } from "@/lib/stocks"
+
+export const metadata: Metadata = {
+  title: "Alerts",
+  description:
+    "Create stock price alerts and receive Candlestick email notifications when targets are crossed.",
+}
 
 export default async function AlertPage() {
   const savedAlerts = await getPriceAlerts()

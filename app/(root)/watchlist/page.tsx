@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { FavouriteIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -12,6 +13,12 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { WatchlistCard } from "@/components/watchlist-card"
+
+export const metadata: Metadata = {
+  title: "Watchlist",
+  description:
+    "Save stocks to your Candlestick watchlist and keep their charts close at hand.",
+}
 
 export default async function WatchlistPage() {
   const stocks = await getWatchlistedStocks()

@@ -1,8 +1,16 @@
+import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { getAlertEmailSetting } from "@/actions/alerts"
 import { AlertEmailForm } from "@/components/alert-email-form"
 import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description:
+    "Manage your Candlestick account settings and alert delivery email.",
+}
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({
