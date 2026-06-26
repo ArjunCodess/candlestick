@@ -1,5 +1,16 @@
+import { FavouriteIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+
 import { getWatchlistedStocks } from "@/actions/watchlist"
 import { StockSearch } from "@/components/stock-search"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { WatchlistCard } from "@/components/watchlist-card"
 
 export default async function WatchlistPage() {
@@ -24,9 +35,20 @@ export default async function WatchlistPage() {
           ))}
         </div>
       ) : (
-        <div className="border border-border px-4 py-10 text-sm text-muted-foreground">
-          Search for a stock, open its page, and add it to your watchlist.
-        </div>
+        <Empty className="border border-border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <HugeiconsIcon icon={FavouriteIcon} strokeWidth={2} />
+            </EmptyMedia>
+            <EmptyTitle>No stocks yet</EmptyTitle>
+            <EmptyDescription>
+              Search for a stock and add it to your watchlist.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <StockSearch className="w-full justify-center sm:w-auto" />
+          </EmptyContent>
+        </Empty>
       )}
     </div>
   )
