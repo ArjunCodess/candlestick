@@ -21,6 +21,7 @@ type StockResult = {
   exchange: string
   industry: string
   name: string
+  providerSymbol: string
   sector: string
   ticker: string
   type: string
@@ -141,10 +142,10 @@ export function StockSearch({ className, onOpen }: StockSearchProps) {
     }
   }
 
-  function selectStock(ticker: string) {
+  function selectStock(symbol: string) {
     setOpen(false)
     resetSearch()
-    router.push(`/stock/${encodeURIComponent(ticker)}`)
+    router.push(`/stock/${encodeURIComponent(symbol)}`)
   }
 
   function toggleStock(
@@ -211,10 +212,10 @@ export function StockSearch({ className, onOpen }: StockSearchProps) {
             <CommandGroup>
               {results.map((stock) => (
                 <CommandItem
-                  key={`${stock.exchange}-${stock.ticker}`}
+                  key={`${stock.exchange}-${stock.providerSymbol}`}
                   className="[&>svg:last-child]:hidden"
                   value={`${stock.name} ${stock.ticker} ${stock.exchange}`}
-                  onSelect={() => selectStock(stock.ticker)}
+                  onSelect={() => selectStock(stock.providerSymbol)}
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <div className="flex min-w-0 items-center justify-between gap-3">
@@ -229,13 +230,15 @@ export function StockSearch({ className, onOpen }: StockSearchProps) {
                   </div>
                   <Button
                     aria-label={
-                      watchlistedSymbols.includes(stock.ticker)
+                      watchlistedSymbols.includes(stock.providerSymbol)
                         ? `Remove ${stock.ticker} from watchlist`
                         : `Add ${stock.ticker} to watchlist`
                     }
                     className="ml-2"
-                    disabled={pendingSymbol === stock.ticker}
-                    onClick={(event) => toggleStock(event, stock.ticker)}
+                    disabled={pendingSymbol === stock.providerSymbol}
+                    onClick={(event) =>
+                      toggleStock(event, stock.providerSymbol)
+                    }
                     onPointerDown={(event) => event.stopPropagation()}
                     size="icon-sm"
                     variant="ghost"
@@ -245,7 +248,7 @@ export function StockSearch({ className, onOpen }: StockSearchProps) {
                       strokeWidth={1.8}
                       className={cn(
                         "size-4",
-                        watchlistedSymbols.includes(stock.ticker)
+                        watchlistedSymbols.includes(stock.providerSymbol)
                           ? "fill-yellow-400 text-yellow-400 [&_path]:fill-current"
                           : "text-muted-foreground"
                       )}

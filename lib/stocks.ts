@@ -139,18 +139,18 @@ export async function searchStocks(query: string, limit = 8) {
     { q: cleanedQuery },
     { next: { revalidate: 60 } }
   )
-  const seenSymbols = new Set<string>()
+  const seenTickers = new Set<string>()
   const results: StockSearchResult[] = []
 
   for (const stock of data.result ?? []) {
     const providerSymbol = stock.symbol ? asSymbol(stock.symbol) : ""
     const ticker = getDisplayStockSymbol(stock.displaySymbol || providerSymbol)
 
-    if (!providerSymbol || !ticker || seenSymbols.has(providerSymbol)) {
+    if (!providerSymbol || !ticker || seenTickers.has(ticker)) {
       continue
     }
 
-    seenSymbols.add(providerSymbol)
+    seenTickers.add(ticker)
     results.push({
       exchange: stock.type ?? "",
       name: stock.description?.trim() || ticker,
