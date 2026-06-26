@@ -4,6 +4,7 @@ import { cron } from "inngest"
 import {
   formatAlertCondition,
   formatPrice,
+  alertFrequencyLabels,
   isAlertCondition,
   isAlertFrequency,
   shouldCheckAlert,
@@ -91,12 +92,17 @@ export const checkPriceAlerts = inngest.createFunction(
 
           await sendAlertEmail({
             to: alert.recipientEmail ?? alert.accountEmail,
-            subject: `${displaySymbol} alert triggered`,
+            subject: `Candlestick Alert: ${displaySymbol} target reached`,
             text: [
-              `${alert.name} triggered.`,
+              `Your Candlestick price alert "${alert.name}" has triggered.`,
               "",
-              `${displaySymbol} is now ${formatPrice(quote.price)}.`,
-              `Alert: ${formatAlertCondition(alert.condition, alert.threshold)}`,
+              `${displaySymbol} is now trading at ${formatPrice(quote.price)}.`,
+              `Alert condition: ${formatAlertCondition(alert.condition, alert.threshold)}.`,
+              `Move today: ${quote.percentChange >= 0 ? "+" : ""}${quote.percentChange.toFixed(2)}%.`,
+              `Check frequency: ${alertFrequencyLabels[alert.frequency]}.`,
+              `Checked at: ${now.toLocaleString("en-US", { timeZone: "UTC" })} UTC.`,
+              "",
+              "This email was sent because the current price crossed your saved threshold. Candlestick will keep watching this alert and will only send again after the selected frequency window allows it.",
             ].join("\n"),
           })
 
