@@ -283,4 +283,8 @@ export const navLinks = [
     label: "Watchlist",
     href: "/watchlist",
   },
+  {
+    label: "Alerts",
+    href: "/alert",
+  },
 ]
