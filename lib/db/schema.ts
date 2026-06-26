@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   boolean,
+  doublePrecision,
   index,
   primaryKey,
 } from "drizzle-orm/pg-core"
@@ -12,6 +13,7 @@ export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  alertEmail: text("alert_email"),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -103,10 +105,41 @@ export const watchlist = pgTable(
   ]
 )
 
+export const priceAlert = pgTable(
+  "price_alert",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    stockSymbol: text("stock_symbol")
+      .notNull()
+      .references(() => stock.symbol, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    condition: text("condition").notNull(),
+    threshold: doublePrecision("threshold").notNull(),
+    frequency: text("frequency").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    lastCheckedAt: timestamp("last_checked_at"),
+    lastTriggeredAt: timestamp("last_triggered_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("priceAlert_userId_idx").on(table.userId),
+    index("priceAlert_stockSymbol_idx").on(table.stockSymbol),
+    index("priceAlert_isActive_idx").on(table.isActive),
+  ]
+)
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   watchlist: many(watchlist),
+  priceAlerts: many(priceAlert),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -125,6 +158,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 export const stockRelations = relations(stock, ({ many }) => ({
   watchlist: many(watchlist),
+  priceAlerts: many(priceAlert),
 }))
 
 export const watchlistRelations = relations(watchlist, ({ one }) => ({
@@ -134,6 +168,17 @@ export const watchlistRelations = relations(watchlist, ({ one }) => ({
   }),
   stock: one(stock, {
     fields: [watchlist.stockSymbol],
+    references: [stock.symbol],
+  }),
+}))
+
+export const priceAlertRelations = relations(priceAlert, ({ one }) => ({
+  user: one(user, {
+    fields: [priceAlert.userId],
+    references: [user.id],
+  }),
+  stock: one(stock, {
+    fields: [priceAlert.stockSymbol],
     references: [stock.symbol],
   }),
 }))

@@ -15,6 +15,13 @@
       "when": 1782387746521,
       "tag": "0001_clumsy_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782410047430,
+      "tag": "0002_lonely_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }
