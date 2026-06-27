@@ -3,6 +3,7 @@ import nodemailer from "nodemailer"
 import type { NewsHeadline } from "@/lib/news"
 
 type AlertEmail = {
+  html?: string
   to: string
   subject: string
   text: string
@@ -56,7 +57,15 @@ function formatMoverLine(stock: QuotedStockReview) {
   return `${stock.symbol}: ${formatSignedPercent(stock.percentChange)} (${formatSignedChange(stock.change)}) at ${stock.price.toFixed(2)}`
 }
 
-export async function sendAlertEmail({ to, subject, text }: AlertEmail) {
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+}
+
+export async function sendAlertEmail({ html, to, subject, text }: AlertEmail) {
   const from =
     process.env.SMTP_FROM ??
     "Candlestick Alerts <arjunv.prakash12345@gmail.com>"
@@ -66,6 +75,7 @@ export async function sendAlertEmail({ to, subject, text }: AlertEmail) {
     to,
     subject,
     text,
+    html,
   })
 }
 
@@ -169,7 +179,71 @@ export async function sendMarketDigestEmail({
     "Sent by Candlestick.",
   ].join("\n")
 
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.55; max-width: 680px;">
+      <h1 style="font-size: 24px; margin: 0 0 8px;">Candlestick Daily Market Digest</h1>
+      <p style="margin: 0 0 20px;"><strong>Your Candlestick market digest is ready.</strong></p>
+      <p style="margin: 0 0 24px;"><em>${escapeHtml(watchlistSummary)}</em></p>
+
+      <h2 style="font-size: 18px; margin: 0 0 12px;">Watchlist movers</h2>
+      <p style="margin: 0 0 8px;"><strong>${escapeHtml(watchlistMoverLines[0] ?? "")}</strong></p>
+      <p style="margin: 0 0 16px;"><strong>${escapeHtml(watchlistMoverLines[1] ?? "")}</strong></p>
+      <p style="margin: 0 0 8px;"><em>Top movers from your watchlist:</em></p>
+      <ol style="margin: 0 0 24px; padding-left: 22px;">
+        ${
+          topMovers.length
+            ? topMovers
+                .map(
+                  (stock) =>
+                    `<li><strong>${escapeHtml(stock.symbol)}</strong>: ${escapeHtml(formatSignedPercent(stock.percentChange))} (${escapeHtml(formatSignedChange(stock.change))}) at ${escapeHtml(stock.price.toFixed(2))}</li>`
+                )
+                .join("")
+            : `<li>${escapeHtml("No quoted watchlist movers available.")}</li>`
+        }
+      </ol>
+
+      <h2 style="font-size: 18px; margin: 0 0 12px;">Business headlines</h2>
+      <ol style="margin: 0 0 24px; padding-left: 22px;">
+        ${headlines
+          .map(
+            (headline) =>
+              `<li style="margin-bottom: 12px;"><strong>${escapeHtml(headline.title)}</strong><br><em>${escapeHtml(headline.sourceName)}</em> - <a href="${escapeHtml(headline.url)}">${escapeHtml(headline.url)}</a></li>`
+          )
+          .join("")}
+      </ol>
+
+      <h2 style="font-size: 18px; margin: 0 0 12px;">Watchlist stock reviews</h2>
+      <div style="margin: 0 0 24px;">
+        ${
+          stockReviews.length
+            ? stockReviews
+                .map((stock) => {
+                  if (stock.price === null) {
+                    return `<p><strong>${escapeHtml(stock.symbol)}</strong>: unavailable<br><a href="${escapeHtml(stock.url)}">${escapeHtml(stock.url)}</a></p>`
+                  }
+
+                  const percentChange =
+                    stock.percentChange === null
+                      ? "unavailable"
+                      : formatSignedPercent(stock.percentChange)
+                  const change =
+                    stock.change === null
+                      ? "unavailable"
+                      : formatSignedChange(stock.change)
+
+                  return `<p><strong>${escapeHtml(stock.symbol)}</strong>: <em>${escapeHtml(stock.review)}</em><br>Price: <strong>${escapeHtml(stock.price.toFixed(2))}</strong> | Move: <strong>${escapeHtml(percentChange)}</strong> (${escapeHtml(change)})<br><a href="${escapeHtml(stock.url)}">${escapeHtml(stock.url)}</a></p>`
+                })
+                .join("")
+            : `<p><em>${escapeHtml("No watchlist stocks yet.")}</em></p>`
+        }
+      </div>
+
+      <p style="margin: 0;"><em>Sent by Candlestick.</em></p>
+    </div>
+  `
+
   await sendAlertEmail({
+    html,
     to,
     subject: "Candlestick Daily Market Digest",
     text,
