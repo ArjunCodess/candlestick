@@ -139,21 +139,28 @@ export async function getStockProfile(symbol: string) {
 }
 
 function parseBseLookup(raw: string, limit: number) {
-  return Array.from(
-    raw.matchAll(
-      /liclick\('(\d+)','([^']+)'\).*?<strong>([A-Z0-9]+)<\/strong>\s+[^<]*<br\s*\/?>/g
-    )
-  )
+  return Array.from(raw.matchAll(/<li[\s\S]*?<\/li>/g))
     .slice(0, limit)
-    .map((match) => ({
-      exchange: "BSE",
-      name: match[2]?.trim() || match[3],
-      percentChange: null,
-      price: null,
-      providerSymbol: encodeBseSymbol(match[1], match[3]),
-      ticker: match[3],
-      type: "Indian Stock",
-    }))
+    .map(([item]) => {
+      const [, code = "", name = ""] =
+        item.match(/liclick\('(\d+)','([^']+)'\)/) ?? []
+      const [, span = ""] = item.match(/<span>([\s\S]*?)<\/span>/) ?? []
+      const ticker = span
+        .replace(/<[^>]+>/g, "")
+        .trim()
+        .split(/\s+/)[0]
+
+      return {
+        exchange: "BSE",
+        name: name.trim() || ticker,
+        percentChange: null,
+        price: null,
+        providerSymbol: code && ticker ? encodeBseSymbol(code, ticker) : "",
+        ticker,
+        type: "Indian Stock",
+      }
+    })
+    .filter((stock) => stock.providerSymbol && stock.ticker)
 }
 
 async function searchBse(query: string, limit: number) {
