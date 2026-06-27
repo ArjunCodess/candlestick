@@ -5,6 +5,7 @@ import {
   timestamp,
   boolean,
   doublePrecision,
+  integer,
   index,
   primaryKey,
 } from "drizzle-orm/pg-core"
@@ -14,6 +15,9 @@ export const user = pgTable("user", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   alertEmail: text("alert_email"),
+  country: text("country").default("us").notNull(),
+  marketDigestHour: integer("market_digest_hour").default(9).notNull(),
+  marketDigestLastSentDate: text("market_digest_last_sent_date"),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
