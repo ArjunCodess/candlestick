@@ -188,28 +188,43 @@ export function normalizeStockSymbol(symbol: string) {
   const normalizedSymbol = decodeURIComponent(symbol)
     .trim()
     .toUpperCase()
-    .replace(/[^A-Z0-9:._!-]/g, "")
+    .replace(/[^A-Z0-9:._!|-]/g, "")
+
+  return normalizedSymbol
+}
+
+function getTradingViewSymbol(symbol: string) {
+  const normalizedSymbol = normalizeStockSymbol(symbol)
+
+  if (normalizedSymbol.startsWith("BSE:")) {
+    const [, , tradingSymbol = ""] =
+      normalizedSymbol.match(/^BSE:([^|]+)\|?([^|]*)$/) ?? []
+
+    return tradingSymbol ? `BSE:${tradingSymbol}` : normalizedSymbol
+  }
 
   return normalizedSymbol
 }
 
 export function getStockWidgets(symbol: string) {
+  const tvSymbol = getTradingViewSymbol(symbol)
+
   return {
     symbolInfo: {
-      title: `${symbol} Snapshot`,
+      title: `${tvSymbol} Snapshot`,
       scriptUrl: tradingViewWidgetScript("embed-widget-symbol-info.js"),
       config: {
         ...tradingViewDarkConfig,
-        symbol,
+        symbol: tvSymbol,
         width: "100%",
       },
     },
     advancedChart: {
-      title: `${symbol} Advanced Chart`,
+      title: `${tvSymbol} Advanced Chart`,
       scriptUrl: tradingViewWidgetScript("embed-widget-advanced-chart.js"),
       config: {
         autosize: true,
-        symbol,
+        symbol: tvSymbol,
         interval: "D",
         timezone: "Etc/UTC",
         theme: "dark",
@@ -227,7 +242,7 @@ export function getStockWidgets(symbol: string) {
       config: {
         ...tradingViewDarkConfig,
         ...tradingViewFullSizeConfig,
-        symbol,
+        symbol: tvSymbol,
         largeChartUrl: "",
         displayMode: "regular",
       },
@@ -239,7 +254,7 @@ export function getStockWidgets(symbol: string) {
         ...tradingViewDarkConfig,
         ...tradingViewFullSizeConfig,
         interval: "1m",
-        symbol,
+        symbol: tvSymbol,
         showIntervalTabs: true,
         displayMode: "single",
       },
@@ -250,20 +265,22 @@ export function getStockWidgets(symbol: string) {
       config: {
         ...tradingViewDarkConfig,
         ...tradingViewFullSizeConfig,
-        symbol,
+        symbol: tvSymbol,
       },
     },
   }
 }
 
 export function getMiniChartWidget(symbol: string) {
+  const tvSymbol = getTradingViewSymbol(symbol)
+
   return {
-    title: symbol,
+    title: tvSymbol,
     scriptUrl: tradingViewWidgetScript("embed-widget-mini-symbol-overview.js"),
     config: {
       ...tradingViewDarkConfig,
       ...tradingViewFullSizeConfig,
-      symbol,
+      symbol: tvSymbol,
       dateRange: "12M",
       noTimeScale: false,
       chartOnly: false,
