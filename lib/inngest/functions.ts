@@ -14,7 +14,8 @@ import { db } from "@/lib/db"
 import { priceAlert, user } from "@/lib/db/schema"
 import { inngest } from "@/lib/inngest/client"
 import { sendAlertEmail } from "@/lib/mail"
-import { getDisplayStockSymbol, getStockQuote } from "../stocks"
+import { getDisplayStockSymbol } from "@/lib/stock-symbols"
+import { getStockQuote } from "../stocks"
 
 export const checkPriceAlerts = inngest.createFunction(
   {

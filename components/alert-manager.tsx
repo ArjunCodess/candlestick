@@ -27,7 +27,7 @@ import {
   type AlertFrequency,
 } from "@/lib/alerts"
 import type { StockProfile, StockQuote } from "@/lib/stocks"
-import { getDisplayStockSymbol } from "@/lib/stocks"
+import { getDisplayStockSymbol } from "@/lib/stock-symbols"
 import {
   AlertDialog,
   AlertDialogAction,

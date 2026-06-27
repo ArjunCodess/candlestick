@@ -9,10 +9,10 @@ import {
   type AlertFrequency,
 } from "@/lib/alerts"
 import {
-  getDisplayStockSymbol,
   getStockProfile,
   getStockQuote,
 } from "@/lib/stocks"
+import { getDisplayStockSymbol } from "@/lib/stock-symbols"
 
 export const metadata: Metadata = {
   title: "Alerts",
