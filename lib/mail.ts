@@ -8,6 +8,15 @@ type AlertEmail = {
   text: string
 }
 
+export type StockReview = {
+  change: number | null
+  percentChange: number | null
+  price: number | null
+  review: string
+  symbol: string
+  url: string
+}
+
 function getTransport() {
   const host = process.env.SMTP_HOST ?? "smtp.gmail.com"
   const port = Number(process.env.SMTP_PORT)
@@ -44,11 +53,29 @@ export async function sendAlertEmail({ to, subject, text }: AlertEmail) {
 
 export async function sendMarketDigestEmail({
   headlines,
+  stockReviews,
   to,
 }: {
   headlines: NewsHeadline[]
+  stockReviews: StockReview[]
   to: string
 }) {
+  const stockLines = stockReviews.length
+    ? stockReviews.map((stock) => {
+        if (stock.price === null) {
+          return `${stock.symbol}: unavailable\n${stock.url}`
+        }
+
+        const sign = stock.percentChange && stock.percentChange > 0 ? "+" : ""
+
+        return [
+          `${stock.symbol}: ${stock.review}`,
+          `Price: ${stock.price.toFixed(2)} | Move: ${sign}${stock.percentChange?.toFixed(2)}% (${stock.change?.toFixed(2)})`,
+          stock.url,
+        ].join("\n")
+      })
+    : ["No watchlist stocks yet."]
+
   const text = [
     "Your Candlestick market digest is ready.",
     "",
@@ -58,6 +85,10 @@ export async function sendMarketDigestEmail({
         `${index + 1}. ${headline.title}\n${headline.sourceName} - ${headline.url}`
     ),
     "",
+    "Watchlist stock reviews:",
+    ...stockLines,
+    "",
+    "Sent by Candlestick.",
   ].join("\n")
 
   await sendAlertEmail({

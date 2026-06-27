@@ -11,9 +11,13 @@ import {
   shouldSendAlert,
 } from "@/lib/alerts"
 import { db } from "@/lib/db"
-import { priceAlert, user } from "@/lib/db/schema"
+import { priceAlert, user, watchlist } from "@/lib/db/schema"
 import { inngest } from "@/lib/inngest/client"
-import { sendAlertEmail, sendMarketDigestEmail } from "@/lib/mail"
+import {
+  type StockReview,
+  sendAlertEmail,
+  sendMarketDigestEmail,
+} from "@/lib/mail"
 import { getMarketDigestTimeZone } from "@/lib/market-digest"
 import { getCountryBusinessHeadlines } from "@/lib/news"
 import { getDisplayStockSymbol } from "@/lib/stock-symbols"
@@ -36,6 +40,48 @@ function getLocalHour(now: Date, timeZone: string) {
       timeZone,
     }).format(now)
   )
+}
+
+function getBaseUrl() {
+  return process.env.BETTER_AUTH_URL
+}
+
+function getReview(percentChange: number) {
+  if (percentChange > 0.5) {
+    return "Positive move"
+  }
+
+  if (percentChange < -0.5) {
+    return "Negative move"
+  }
+
+  return "Flat move"
+}
+
+async function getStockReviews(userId: string) {
+  const stocks = await db
+    .select({ symbol: watchlist.stockSymbol })
+    .from(watchlist)
+    .where(eq(watchlist.userId, userId))
+
+  const reviews: StockReview[] = []
+
+  for (const stock of stocks) {
+    const displaySymbol = getDisplayStockSymbol(stock.symbol)
+    const url = `${getBaseUrl()}/stock/${encodeURIComponent(stock.symbol)}`
+    const quote = await getStockQuote(stock.symbol).catch(() => null)
+
+    reviews.push({
+      change: quote?.change ?? null,
+      percentChange: quote?.percentChange ?? null,
+      price: quote?.price ?? null,
+      review: quote ? getReview(quote.percentChange) : "Unavailable",
+      symbol: displaySymbol,
+      url,
+    })
+  }
+
+  return reviews
 }
 
 export const checkPriceAlerts = inngest.createFunction(
@@ -182,9 +228,11 @@ export const sendMarketDigests = inngest.createFunction(
         }
 
         const headlines = await getCountryBusinessHeadlines(savedUser.country)
+        const stockReviews = await getStockReviews(savedUser.id)
 
         await sendMarketDigestEmail({
           headlines,
+          stockReviews,
           to: savedUser.alertEmail ?? savedUser.email,
         })
 
