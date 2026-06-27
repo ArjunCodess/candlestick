@@ -15,8 +15,8 @@ import { priceAlert, user, watchlist } from "@/lib/db/schema"
 import { inngest } from "@/lib/inngest/client"
 import {
   type StockReview,
-  sendAlertEmail,
   sendMarketDigestEmail,
+  sendPriceAlertEmail,
 } from "@/lib/mail"
 import { getMarketDigestTimeZone } from "@/lib/market-digest"
 import { getCountryBusinessHeadlines } from "@/lib/news"
@@ -158,20 +158,15 @@ export const checkPriceAlerts = inngest.createFunction(
         if (shouldSend) {
           const displaySymbol = getDisplayStockSymbol(alert.stockSymbol)
 
-          await sendAlertEmail({
+          await sendPriceAlertEmail({
+            alertName: alert.name,
+            checkedAt: now.toLocaleString("en-US", { timeZone: "UTC" }),
+            condition: formatAlertCondition(alert.condition, alert.threshold),
+            frequency: alertFrequencyLabels[alert.frequency],
+            move: `${quote.percentChange >= 0 ? "+" : ""}${quote.percentChange.toFixed(2)}%`,
+            price: formatPrice(quote.price),
+            symbol: displaySymbol,
             to: alert.recipientEmail ?? alert.accountEmail,
-            subject: `Candlestick Alert: ${displaySymbol} target reached`,
-            text: [
-              `Your Candlestick price alert "${alert.name}" has triggered.`,
-              "",
-              `${displaySymbol} is now trading at ${formatPrice(quote.price)}.`,
-              `Alert condition: ${formatAlertCondition(alert.condition, alert.threshold)}.`,
-              `Move today: ${quote.percentChange >= 0 ? "+" : ""}${quote.percentChange.toFixed(2)}%.`,
-              `Check frequency: ${alertFrequencyLabels[alert.frequency]}.`,
-              `Checked at: ${now.toLocaleString("en-US", { timeZone: "UTC" })} UTC.`,
-              "",
-              "This email was sent because the current price crossed your saved threshold. Candlestick will keep watching this alert and will only send again after the selected frequency window allows it.",
-            ].join("\n"),
           })
 
           sent += 1

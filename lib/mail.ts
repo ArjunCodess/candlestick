@@ -79,6 +79,63 @@ export async function sendAlertEmail({ html, to, subject, text }: AlertEmail) {
   })
 }
 
+export async function sendPriceAlertEmail({
+  alertName,
+  checkedAt,
+  condition,
+  frequency,
+  move,
+  price,
+  symbol,
+  to,
+}: {
+  alertName: string
+  checkedAt: string
+  condition: string
+  frequency: string
+  move: string
+  price: string
+  symbol: string
+  to: string
+}) {
+  const text = [
+    `Your Candlestick price alert "${alertName}" has triggered.`,
+    "",
+    `${symbol} is now trading at ${price}.`,
+    `Alert condition: ${condition}.`,
+    `Move today: ${move}.`,
+    `Check frequency: ${frequency}.`,
+    `Checked at: ${checkedAt} UTC.`,
+    "",
+    "This email was sent because the current price crossed your saved threshold.",
+    "Candlestick will keep watching this alert and will only send again after the selected frequency window allows it.",
+  ].join("\n")
+
+  const html = `
+    <div style="font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #111827; line-height: 1.55; max-width: 750px;">
+      <h1 style="font-size: 24px; margin: 0 0 8px;">Price Alert Triggered</h1>
+      <p style="margin: 0 0 24px;"><strong>${escapeHtml(`Your Candlestick price alert "${alertName}" has triggered.`)}</strong></p>
+
+      <h2 style="font-size: 18px; margin: 0 0 12px;">${escapeHtml(symbol)}</h2>
+      <p style="margin: 0 0 8px;">${escapeHtml(symbol)} is now trading at <strong>${escapeHtml(price)}</strong>.</p>
+      <p style="margin: 0 0 8px;">Alert condition: <strong>${escapeHtml(condition)}</strong>.</p>
+      <p style="margin: 0 0 8px;">Move today: <strong>${escapeHtml(move)}</strong>.</p>
+      <p style="margin: 0 0 8px;">Check frequency: <em>${escapeHtml(frequency)}</em>.</p>
+      <p style="margin: 0 0 24px;">Checked at: <em>${escapeHtml(checkedAt)} UTC</em>.</p>
+
+      <p style="margin: 0 0 6px;"><em>${escapeHtml("This email was sent because the current price crossed your saved threshold.")}</em></p>
+      <p style="margin: 0;"><em>${escapeHtml("Candlestick will keep watching this alert and will only send again after the selected frequency window allows it.")}</em></p>
+    </div>
+  `
+
+  await sendAlertEmail({
+    html,
+    to,
+    subject: `Candlestick Alert: ${symbol} target reached`,
+    text,
+  })
+}
+
 export async function sendMarketDigestEmail({
   headlines,
   stockReviews,
