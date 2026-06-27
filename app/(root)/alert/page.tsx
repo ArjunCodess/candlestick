@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { getPriceAlerts } from "@/actions/alerts"
+import { getPriceAlerts } from "@/actions/notifications"
 import { AlertManager, type AlertCardItem } from "@/components/alert-manager"
 import {
   isAlertCondition,

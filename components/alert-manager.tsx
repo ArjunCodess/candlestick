@@ -15,7 +15,7 @@ import {
   deletePriceAlert,
   updatePriceAlert,
   type PriceAlertInput,
-} from "@/actions/alerts"
+} from "@/actions/notifications"
 import {
   alertConditionLabels,
   alertConditions,
