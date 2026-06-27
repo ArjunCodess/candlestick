@@ -2,14 +2,14 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { getAlertEmailSetting } from "@/actions/alerts"
-import { AlertEmailForm } from "@/components/alert-email-form"
+import { getMarketDigestSettings } from "@/actions/alerts"
+import { MarketDigestSettingsForm } from "@/components/market-digest-settings-form"
 import { auth } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Settings",
   description:
-    "Manage your Candlestick account settings and alert delivery email.",
+    "Manage your Candlestick account settings and market digest delivery.",
 }
 
 export default async function SettingsPage() {
@@ -21,7 +21,7 @@ export default async function SettingsPage() {
     redirect("/sign-in?callbackURL=/settings")
   }
 
-  const emailSetting = await getAlertEmailSetting()
+  const marketDigestSettings = await getMarketDigestSettings()
 
   return (
     <div className="max-w-2xl">
@@ -29,9 +29,10 @@ export default async function SettingsPage() {
         Settings
       </h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        Manage your Candlestick account and market tracking preferences.
+        Manage your Candlestick account, alert delivery, and daily market
+        digest preferences.
       </p>
-      <AlertEmailForm {...emailSetting} />
+      <MarketDigestSettingsForm {...marketDigestSettings} />
     </div>
   )
 }
