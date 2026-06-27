@@ -17,6 +17,11 @@ import { auth } from "@/lib/auth"
 import { normalizeStockSymbol } from "@/lib/constants"
 import { db } from "@/lib/db"
 import { priceAlert, stock, user } from "@/lib/db/schema"
+import {
+  defaultMarketDigestCountry,
+  defaultMarketDigestHour,
+  isMarketDigestCountryCode,
+} from "@/lib/market-digest"
 
 export type PriceAlertInput = {
   name: string
@@ -24,6 +29,12 @@ export type PriceAlertInput = {
   condition: AlertCondition
   threshold: number
   frequency: AlertFrequency
+}
+
+export type MarketDigestSettingsInput = {
+  alertEmail: string
+  country: string
+  marketDigestHour: number
 }
 
 async function getRequiredSession(callbackPath = "/alert") {
@@ -133,11 +144,16 @@ export async function deletePriceAlert(id: string) {
   revalidatePath("/alert")
 }
 
-export async function getAlertEmailSetting() {
+export async function getMarketDigestSettings() {
   const session = await getRequiredSession("/settings")
 
   const [settings] = await db
-    .select({ email: user.email, alertEmail: user.alertEmail })
+    .select({
+      email: user.email,
+      alertEmail: user.alertEmail,
+      country: user.country,
+      marketDigestHour: user.marketDigestHour,
+    })
     .from(user)
     .where(eq(user.id, session.user.id))
     .limit(1)
@@ -145,20 +161,42 @@ export async function getAlertEmailSetting() {
   return {
     accountEmail: settings?.email ?? session.user.email,
     alertEmail: settings?.alertEmail ?? settings?.email ?? session.user.email,
+    country: settings?.country ?? defaultMarketDigestCountry,
+    marketDigestHour: settings?.marketDigestHour ?? defaultMarketDigestHour,
   }
 }
 
-export async function updateAlertEmailSetting(alertEmail: string) {
+export async function updateMarketDigestSettings(
+  input: MarketDigestSettingsInput
+) {
   const session = await getRequiredSession("/settings")
-  const cleanedEmail = alertEmail.trim()
+  const cleanedEmail = input.alertEmail.trim()
+  const cleanedCountry = input.country.trim().toLowerCase()
+  const marketDigestHour = Number(input.marketDigestHour)
 
   if (!cleanedEmail || !cleanedEmail.includes("@")) {
     throw new Error("Enter a valid email address.")
   }
 
+  if (!isMarketDigestCountryCode(cleanedCountry)) {
+    throw new Error("Select a supported country.")
+  }
+
+  if (
+    !Number.isInteger(marketDigestHour) ||
+    marketDigestHour < 0 ||
+    marketDigestHour > 23
+  ) {
+    throw new Error("Select a digest time between 00:00 and 23:00.")
+  }
+
   await db
     .update(user)
-    .set({ alertEmail: cleanedEmail })
+    .set({
+      alertEmail: cleanedEmail,
+      country: cleanedCountry,
+      marketDigestHour,
+    })
     .where(eq(user.id, session.user.id))
 
   revalidatePath("/settings")
