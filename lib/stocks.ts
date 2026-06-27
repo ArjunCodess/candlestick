@@ -1,4 +1,9 @@
 import { normalizeStockSymbol } from "@/lib/constants"
+import {
+  encodeBseSymbol,
+  getDisplayStockSymbol,
+  parseBseSymbol,
+} from "@/lib/stock-symbols"
 
 export type StockQuote = {
   price: number
@@ -21,110 +26,170 @@ export type StockSearchResult = {
   type: string
 }
 
-type FinnhubQuote = {
-  c?: number
-  d?: number
-  dp?: number
-}
-
-type FinnhubProfile = {
-  name?: string
-  logo?: string
-}
-
-type FinnhubSearchItem = {
-  description?: string
-  displaySymbol?: string
-  symbol?: string
-  type?: string
-}
-
 type FinnhubSearchResponse = {
-  result?: FinnhubSearchItem[]
+  result?: {
+    description?: string
+    displaySymbol?: string
+    symbol?: string
+    type?: string
+  }[]
 }
 
 const finnhubBaseUrl = "https://finnhub.io/api/v1"
 
-function getFinnhubToken() {
-  return process.env.FINNHUB_API_KEY ?? process.env.FINNHUB_TOKEN
+function numberValue(value: unknown) {
+  const number = Number(value)
+
+  return Number.isFinite(number) ? number : 0
 }
 
-export function getDisplayStockSymbol(symbol: string) {
-  return normalizeStockSymbol(symbol).split(".")[0]
-}
-
-function asSymbol(symbol: string) {
-  return normalizeStockSymbol(symbol)
-}
-
-async function fetchFinnhub<T>(
-  path: string,
-  params: Record<string, string>,
-  init?: RequestInit
-) {
-  const token = getFinnhubToken()
+async function fetchFinnhub<T>(path: string, params: Record<string, string>) {
+  const token = process.env.FINNHUB_API_KEY ?? process.env.FINNHUB_TOKEN
 
   if (!token) {
     throw new Error("Finnhub API key is not configured.")
   }
 
   const url = new URL(`${finnhubBaseUrl}${path}`)
-
-  for (const [key, value] of Object.entries(params)) {
+  Object.entries(params).forEach(([key, value]) => {
     url.searchParams.set(key, value)
-  }
+  })
 
   const response = await fetch(url, {
-    ...init,
     headers: {
       Accept: "application/json",
       "X-Finnhub-Token": token,
-      ...init?.headers,
     },
+    cache: "no-store",
   })
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as {
-      error?: string
-    } | null
-
-    throw new Error(data?.error ?? "Unable to fetch stock data.")
+    throw new Error("Unable to fetch Finnhub stock data.")
   }
 
   return response.json() as Promise<T>
 }
 
-export async function getStockQuote(symbol: string) {
-  const providerSymbol = asSymbol(symbol)
-  const quote = await fetchFinnhub<FinnhubQuote>(
-    "/quote",
-    { symbol: providerSymbol },
-    { cache: "no-store" }
-  )
+async function getBseClient() {
+  const { BSE } = await import("nse-bse-api")
 
-  if (!quote.c || quote.c <= 0) {
+  return new BSE({ downloadFolder: "./.tmp-nse-bse", timeout: 30000 })
+}
+
+async function getBseQuote(symbol: string) {
+  const bseSymbol = parseBseSymbol(symbol)
+
+  if (!bseSymbol) {
     return null
   }
 
-  return {
-    price: quote.c,
-    change: quote.d ?? 0,
-    percentChange: quote.dp ?? 0,
-  } satisfies StockQuote
+  const bse = await getBseClient()
+  const quote = await bse.quote(bseSymbol.code)
+  const price = numberValue(quote.LTP)
+  const previousClose = numberValue(quote.PrevClose)
+  const change = previousClose ? price - previousClose : 0
+
+  return price > 0
+    ? ({
+        price,
+        change,
+        percentChange: previousClose ? (change / previousClose) * 100 : 0,
+      } satisfies StockQuote)
+    : null
+}
+
+async function getFinnhubQuote(symbol: string) {
+  const quote = await fetchFinnhub<{ c?: number; d?: number; dp?: number }>(
+    "/quote",
+    { symbol: normalizeStockSymbol(symbol) }
+  )
+
+  return quote.c && quote.c > 0
+    ? ({
+        price: quote.c,
+        change: quote.d ?? 0,
+        percentChange: quote.dp ?? 0,
+      } satisfies StockQuote)
+    : null
+}
+
+export async function getStockQuote(symbol: string) {
+  return parseBseSymbol(symbol) ? getBseQuote(symbol) : getFinnhubQuote(symbol)
 }
 
 export async function getStockProfile(symbol: string) {
-  const providerSymbol = asSymbol(symbol)
-  const profile = await fetchFinnhub<FinnhubProfile>(
+  const bseSymbol = parseBseSymbol(symbol)
+
+  if (bseSymbol) {
+    return { name: bseSymbol.ticker, logo: "" } satisfies StockProfile
+  }
+
+  const profile = await fetchFinnhub<{ name?: string; logo?: string }>(
     "/stock/profile2",
-    { symbol: providerSymbol },
-    { next: { revalidate: 60 * 60 * 24 } }
+    { symbol: normalizeStockSymbol(symbol) }
   )
 
   return {
-    name: profile.name?.trim() || getDisplayStockSymbol(providerSymbol),
+    name: profile.name?.trim() || getDisplayStockSymbol(symbol),
     logo: profile.logo?.trim() || "",
   } satisfies StockProfile
+}
+
+function parseBseLookup(raw: string, limit: number) {
+  return Array.from(
+    raw.matchAll(
+      /liclick\('(\d+)','([^']+)'\).*?<strong>([A-Z0-9]+)<\/strong>\s+[^<]*<br\s*\/?>/g
+    )
+  )
+    .slice(0, limit)
+    .map((match) => ({
+      exchange: "BSE",
+      name: match[2]?.trim() || match[3],
+      percentChange: null,
+      price: null,
+      providerSymbol: encodeBseSymbol(match[1], match[3]),
+      ticker: match[3],
+      type: "Indian Stock",
+    }))
+}
+
+async function searchBse(query: string, limit: number) {
+  const bse = await getBseClient()
+  const raw = await (
+    bse as unknown as { lookup: (text: string) => Promise<string> }
+  )
+    .lookup(query)
+    .catch(() => "")
+
+  return parseBseLookup(raw, limit)
+}
+
+async function searchFinnhub(query: string, limit: number) {
+  const data = await fetchFinnhub<FinnhubSearchResponse>("/search", {
+    q: query,
+  }).catch(() => ({ result: [] }))
+
+  return (data.result ?? [])
+    .map((stock) => {
+      const providerSymbol = stock.symbol
+        ? normalizeStockSymbol(stock.symbol)
+        : ""
+      const ticker = getDisplayStockSymbol(
+        stock.displaySymbol || providerSymbol
+      )
+
+      return {
+        exchange: stock.type ?? "",
+        name: stock.description?.trim() || ticker,
+        percentChange: null,
+        price: null,
+        providerSymbol,
+        ticker,
+        type: stock.type ?? "Stock",
+      }
+    })
+    .filter((stock) => stock.providerSymbol && stock.ticker)
+    .slice(0, limit)
 }
 
 export async function searchStocks(query: string, limit = 8) {
@@ -134,40 +199,17 @@ export async function searchStocks(query: string, limit = 8) {
     return []
   }
 
-  const data = await fetchFinnhub<FinnhubSearchResponse>(
-    "/search",
-    { q: cleanedQuery },
-    { next: { revalidate: 60 } }
+  const stocks = [
+    ...(await searchBse(cleanedQuery, limit).catch(() => [])),
+    ...(await searchFinnhub(cleanedQuery, limit)),
+  ]
+  const uniqueStocks = stocks.filter(
+    (stock, index) =>
+      stocks.findIndex((item) => item.ticker === stock.ticker) === index
   )
-  const seenTickers = new Set<string>()
-  const results: StockSearchResult[] = []
-
-  for (const stock of data.result ?? []) {
-    const providerSymbol = stock.symbol ? asSymbol(stock.symbol) : ""
-    const ticker = getDisplayStockSymbol(stock.displaySymbol || providerSymbol)
-
-    if (!providerSymbol || !ticker || seenTickers.has(ticker)) {
-      continue
-    }
-
-    seenTickers.add(ticker)
-    results.push({
-      exchange: stock.type ?? "",
-      name: stock.description?.trim() || ticker,
-      percentChange: null,
-      price: null,
-      providerSymbol,
-      ticker,
-      type: stock.type ?? "Stock",
-    })
-
-    if (results.length === limit) {
-      break
-    }
-  }
 
   return Promise.all(
-    results.map(async (stock) => {
+    uniqueStocks.slice(0, limit).map(async (stock) => {
       const quote = await getStockQuote(stock.providerSymbol).catch(() => null)
 
       return {
