@@ -13,9 +13,30 @@ import {
 import { db } from "@/lib/db"
 import { priceAlert, user } from "@/lib/db/schema"
 import { inngest } from "@/lib/inngest/client"
-import { sendAlertEmail } from "@/lib/mail"
+import { sendAlertEmail, sendMarketDigestEmail } from "@/lib/mail"
+import { getMarketDigestTimeZone } from "@/lib/market-digest"
+import { getCountryBusinessHeadlines } from "@/lib/news"
 import { getDisplayStockSymbol } from "@/lib/stock-symbols"
 import { getStockQuote } from "../stocks"
+
+function getLocalDate(now: Date, timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).format(now)
+}
+
+function getLocalHour(now: Date, timeZone: string) {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      hourCycle: "h23",
+      timeZone,
+    }).format(now)
+  )
+}
 
 export const checkPriceAlerts = inngest.createFunction(
   {
@@ -128,4 +149,56 @@ export const checkPriceAlerts = inngest.createFunction(
   }
 )
 
-export const functions = [checkPriceAlerts]
+export const sendMarketDigests = inngest.createFunction(
+  {
+    id: "send-market-digests",
+    triggers: [cron("0 * * * *")],
+  },
+  async ({ step }) => {
+    return step.run("send due digests", async () => {
+      const now = new Date()
+      const users = await db
+        .select({
+          id: user.id,
+          email: user.email,
+          alertEmail: user.alertEmail,
+          country: user.country,
+          marketDigestHour: user.marketDigestHour,
+          marketDigestLastSentDate: user.marketDigestLastSentDate,
+        })
+        .from(user)
+
+      let sent = 0
+
+      for (const savedUser of users) {
+        const timeZone = getMarketDigestTimeZone(savedUser.country)
+        const localDate = getLocalDate(now, timeZone)
+
+        if (
+          savedUser.marketDigestLastSentDate === localDate ||
+          savedUser.marketDigestHour !== getLocalHour(now, timeZone)
+        ) {
+          continue
+        }
+
+        const headlines = await getCountryBusinessHeadlines(savedUser.country)
+
+        await sendMarketDigestEmail({
+          headlines,
+          to: savedUser.alertEmail ?? savedUser.email,
+        })
+
+        await db
+          .update(user)
+          .set({ marketDigestLastSentDate: localDate })
+          .where(eq(user.id, savedUser.id))
+
+        sent += 1
+      }
+
+      return { checked: users.length, sent }
+    })
+  }
+)
+
+export const functions = [checkPriceAlerts, sendMarketDigests]
