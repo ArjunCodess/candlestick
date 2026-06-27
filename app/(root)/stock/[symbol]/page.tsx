@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
 import { isStockWatchlisted } from "@/actions/watchlist"
 import { TvWidget } from "@/components/tv-widget"
@@ -24,6 +25,12 @@ export async function generateMetadata({
 
 export default async function StockPage({ params }: StockPageProps) {
   const symbol = normalizeStockSymbol((await params).symbol)
+  const canonicalSymbol = symbol.split(".")[0]
+
+  if (canonicalSymbol !== symbol) {
+    redirect(`/stock/${encodeURIComponent(canonicalSymbol)}`)
+  }
+
   const isWatchlisted = await isStockWatchlisted(symbol)
   const widgets = getStockWidgets(symbol)
 
