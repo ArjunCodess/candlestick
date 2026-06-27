@@ -7,7 +7,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { authClient } from "@/lib/auth-client"
+import {
+  defaultMarketDigestCountry,
+  defaultMarketDigestHour,
+  marketDigestCountries,
+  marketDigestHourOptions,
+} from "@/lib/market-digest"
 import { cn } from "@/lib/utils"
 
 type AuthFormProps = {
@@ -26,6 +39,10 @@ export function AuthForm({ description, footer, mode, title }: AuthFormProps) {
     "email" | "google" | null
   >(null)
   const [showPassword, setShowPassword] = React.useState(false)
+  const [country, setCountry] = React.useState(defaultMarketDigestCountry)
+  const [marketDigestHour, setMarketDigestHour] = React.useState(
+    String(defaultMarketDigestHour)
+  )
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -36,6 +53,8 @@ export function AuthForm({ description, footer, mode, title }: AuthFormProps) {
     const email = String(formData.get("email") ?? "")
     const password = String(formData.get("password") ?? "")
     const name = String(formData.get("name") ?? "")
+    const alertEmail = String(formData.get("alertEmail") ?? "").trim()
+    const digestHour = Number(marketDigestHour)
 
     const result =
       mode === "sign-in"
@@ -48,6 +67,11 @@ export function AuthForm({ description, footer, mode, title }: AuthFormProps) {
             email,
             name,
             password,
+            alertEmail: alertEmail || email,
+            country,
+            marketDigestHour: Number.isInteger(digestHour)
+              ? digestHour
+              : defaultMarketDigestHour,
             callbackURL,
           })
 
@@ -141,6 +165,39 @@ export function AuthForm({ description, footer, mode, title }: AuthFormProps) {
           showPassword={showPassword}
           togglePassword={() => setShowPassword((visible) => !visible)}
         />
+        {isSignUp && (
+          <>
+            <Field
+              autoComplete="email"
+              label="Alert email"
+              name="alertEmail"
+              placeholder="Defaults to your account email"
+              type="email"
+            />
+            <SelectField
+              label="Country"
+              onValueChange={setCountry}
+              value={country}
+            >
+              {marketDigestCountries.map((option) => (
+                <SelectItem key={option.code} value={option.code}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectField>
+            <SelectField
+              label="Digest time"
+              onValueChange={setMarketDigestHour}
+              value={marketDigestHour}
+            >
+              {marketDigestHourOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectField>
+          </>
+        )}
         {error && (
           <p className="border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
@@ -219,6 +276,37 @@ function Field({
         )}
         {...props}
       />
+    </label>
+  )
+}
+
+function SelectField({
+  children,
+  label,
+  onValueChange,
+  value,
+}: {
+  children: React.ReactNode
+  label: string
+  onValueChange: (value: string) => void
+  value: string
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium text-foreground">
+      <span>{label}</span>
+      <Select
+        onValueChange={(nextValue) => {
+          if (nextValue) {
+            onValueChange(nextValue)
+          }
+        }}
+        value={value}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent align="start">{children}</SelectContent>
+      </Select>
     </label>
   )
 }
