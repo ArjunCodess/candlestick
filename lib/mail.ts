@@ -161,7 +161,6 @@ export async function sendMarketDigestEmail({
     : ["No watchlist stocks yet."]
 
   const text = [
-    "Your Candlestick market digest is ready.",
     watchlistSummary,
     "",
     "Watchlist movers:",
@@ -180,9 +179,8 @@ export async function sendMarketDigestEmail({
   ].join("\n")
 
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.55; max-width: 680px;">
-      <h1 style="font-size: 24px; margin: 0 0 8px;">Candlestick Daily Market Digest</h1>
-      <p style="margin: 0 0 20px;"><strong>Your Candlestick market digest is ready.</strong></p>
+    <div style="font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #111827; line-height: 1.55; max-width: 750px;">
+      <h1 style="font-size: 24px; margin: 0 0 8px;">Daily Market Digest</h1>
       <p style="margin: 0 0 24px;"><em>${escapeHtml(watchlistSummary)}</em></p>
 
       <h2 style="font-size: 18px; margin: 0 0 12px;">Watchlist movers</h2>
@@ -245,7 +243,7 @@ export async function sendMarketDigestEmail({
   await sendAlertEmail({
     html,
     to,
-    subject: "Candlestick Daily Market Digest",
+    subject: "Candlestick: Daily Market Digest",
     text,
   })
 }
