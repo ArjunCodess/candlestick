@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     "Create stock price alerts and receive Candlestick email notifications when targets are crossed.",
 }
 
+export const runtime = "nodejs"
+
 export default async function AlertPage() {
   const savedAlerts = await getPriceAlerts()
   const alerts = await Promise.all(

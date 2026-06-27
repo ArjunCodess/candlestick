@@ -4,6 +4,8 @@ import { searchStocks } from "@/lib/stocks"
 
 const RESULT_LIMIT = 8
 
+export const runtime = "nodejs"
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get("q")?.trim()

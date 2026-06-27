@@ -1,3 +1,7 @@
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { BSE } from "nse-bse-api/bse"
+
 import { normalizeStockSymbol } from "@/lib/constants"
 import {
   encodeBseSymbol,
@@ -36,6 +40,7 @@ type FinnhubSearchResponse = {
 }
 
 const finnhubBaseUrl = "https://finnhub.io/api/v1"
+const bseDownloadFolder = join(tmpdir(), "candlestick-nse-bse")
 
 function numberValue(value: unknown) {
   const number = Number(value)
@@ -71,9 +76,7 @@ async function fetchFinnhub<T>(path: string, params: Record<string, string>) {
 }
 
 async function getBseClient() {
-  const { BSE } = await import("nse-bse-api")
-
-  return new BSE({ downloadFolder: "./.tmp-nse-bse", timeout: 30000 })
+  return new BSE({ downloadFolder: bseDownloadFolder, timeout: 30000 })
 }
 
 async function getBseQuote(symbol: string) {
