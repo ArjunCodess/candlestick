@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
-import { updateMarketDigestSettings } from "@/actions/alerts"
+import { updateMarketDigestSettings } from "@/actions/notifications"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -33,19 +33,19 @@ import {
   marketDigestHourOptions,
 } from "@/lib/market-digest"
 
-type MarketDigestSettingsFormProps = {
+type SettingsFormProps = {
   accountEmail: string
   alertEmail: string
   country: string
   marketDigestHour: number
 }
 
-export function MarketDigestSettingsForm({
+export function SettingsForm({
   accountEmail,
   alertEmail,
   country,
   marketDigestHour,
-}: MarketDigestSettingsFormProps) {
+}: SettingsFormProps) {
   const router = useRouter()
   const [email, setEmail] = React.useState(alertEmail)
   const [selectedCountry, setSelectedCountry] = React.useState(country)
@@ -84,10 +84,10 @@ export function MarketDigestSettingsForm({
   return (
     <Card className="mt-8">
       <CardHeader>
-        <CardTitle>Market digest</CardTitle>
+        <CardTitle>Notification settings</CardTitle>
         <CardDescription>
-          Daily country headlines and watchlist updates will be sent to this
-          address. Defaults to {accountEmail}.
+          Price alerts and daily market digests will be sent to this address.
+          Defaults to {accountEmail}.
         </CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
@@ -160,7 +160,7 @@ export function MarketDigestSettingsForm({
             </Field>
           </FieldGroup>
         </CardContent>
-        <CardFooter className="gap-3 mt-6">
+        <CardFooter className="mt-6 gap-3">
           <Button disabled={saving} type="submit">
             {saved
               ? "Saved digest settings"
