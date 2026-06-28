@@ -7,6 +7,7 @@ import {
   doublePrecision,
   integer,
   index,
+  jsonb,
   primaryKey,
 } from "drizzle-orm/pg-core"
 
@@ -18,6 +19,8 @@ export const user = pgTable("user", {
   country: text("country").default("us").notNull(),
   marketDigestHour: integer("market_digest_hour").default(9).notNull(),
   marketDigestLastSentDate: text("market_digest_last_sent_date"),
+  dashboardSettings: jsonb("dashboard_settings"),
+  dashboardSettingsSavedAt: timestamp("dashboard_settings_saved_at"),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
