@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { getDashboardSettings } from "@/actions/dashboard-settings"
 import { TvWidget } from "@/components/tv-widget"
 import { auth } from "@/lib/auth"
-import { widgets } from "@/lib/constants"
+import { getDashboardWidgets } from "@/lib/dashboard-widgets"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -21,9 +22,12 @@ export default async function DashboardPage() {
     redirect("/sign-in?callbackURL=/dashboard")
   }
 
+  const { dashboardSettings } = await getDashboardSettings()
+  const dashboardWidgets = getDashboardWidgets(dashboardSettings)
+
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-      {widgets.map((widget) => (
+      {dashboardWidgets.map((widget) => (
         <TvWidget key={widget.title} {...widget} />
       ))}
     </div>
