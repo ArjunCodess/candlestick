@@ -1,3 +1,4 @@
+import { DashboardSettingsBanner } from "@/components/dashboard-settings-banner"
 import { Header } from "@/components/header"
 
 export default function RootLayout({
@@ -8,7 +9,10 @@ export default function RootLayout({
   return (
     <main className="min-h-screen text-gray-400">
       <Header />
-      <div className="mx-auto max-w-screen-2xl px-4 md:px-6 lg:px-8 py-10">{children}</div>
+      <DashboardSettingsBanner />
+      <div className="mx-auto max-w-screen-2xl px-4 py-10 md:px-6 lg:px-8">
+        {children}
+      </div>
     </main>
   )
 }
