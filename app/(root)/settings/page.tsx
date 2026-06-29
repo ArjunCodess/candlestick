@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { getDashboardSettings } from "@/actions/dashboard-settings"
 import { getMarketDigestSettings } from "@/actions/notifications"
+import { DashboardSettingsForm } from "@/components/dashboard-settings-form"
 import { SettingsForm } from "@/components/settings-form"
 import { auth } from "@/lib/auth"
 
@@ -21,11 +23,14 @@ export default async function SettingsPage() {
     redirect("/sign-in?callbackURL=/settings")
   }
 
-  const marketDigestSettings = await getMarketDigestSettings()
+  const [marketDigestSettings, dashboardSettings] = await Promise.all([
+    getMarketDigestSettings(),
+    getDashboardSettings(),
+  ])
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="max-w-2xl">
+      <div className="w-full max-w-3xl">
         <h1 className="text-3xl font-semibold tracking-normal text-foreground">
           Settings
         </h1>
@@ -33,7 +38,8 @@ export default async function SettingsPage() {
           Manage your Candlestick account, alert delivery, and daily market
           digest preferences.
         </p>
-      <SettingsForm {...marketDigestSettings} />
+        <SettingsForm {...marketDigestSettings} />
+        <DashboardSettingsForm settings={dashboardSettings.dashboardSettings} />
       </div>
     </div>
   )
