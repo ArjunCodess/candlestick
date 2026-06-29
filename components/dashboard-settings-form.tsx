@@ -53,15 +53,17 @@ const widgetLabels: Array<{ id: DashboardWidgetId; label: string }> = [
   { id: "marketData", label: "Market Data" },
 ]
 
-const dateRangeOptions: Array<{ value: MarketOverviewDateRange; label: string }> =
-  [
-    { value: "1D", label: "1 day" },
-    { value: "1M", label: "1 month" },
-    { value: "3M", label: "3 months" },
-    { value: "12M", label: "1 year" },
-    { value: "60M", label: "5 years" },
-    { value: "ALL", label: "All" },
-  ]
+const dateRangeOptions: Array<{
+  value: MarketOverviewDateRange
+  label: string
+}> = [
+  { value: "1D", label: "1 day" },
+  { value: "1M", label: "1 month" },
+  { value: "3M", label: "3 months" },
+  { value: "12M", label: "1 year" },
+  { value: "60M", label: "5 years" },
+  { value: "ALL", label: "All" },
+]
 
 const heatmapSources = [
   { value: "SPX500", label: "S&P 500" },
@@ -304,7 +306,7 @@ export function DashboardSettingsForm({
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="mt-6 flex-col items-stretch justify-between border-t gap-3 sm:flex-row sm:items-center">
+        <CardFooter className="mt-6 flex-col items-stretch justify-between gap-3 border-t sm:flex-row sm:items-center">
           <p className="text-sm text-muted-foreground">
             {saved ? "Dashboard settings saved." : "Changes apply after save."}
           </p>
@@ -365,7 +367,7 @@ function TabsEditor({
       <FieldDescription>
         Use TradingView symbols like NASDAQ:AAPL or BINANCE:BTCUSDT.
       </FieldDescription>
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-4 xl:grid-cols-2">
         {tabs.map((tab, tabIndex) => (
           <EditableGroup
             canRemove={tabs.length > 1}
@@ -395,9 +397,15 @@ function TabsEditor({
             />
           </EditableGroup>
         ))}
+      </div>
+      <div className="flex">
         <Button
+          className="w-full"
           onClick={() =>
-            onChange([...tabs, { title: "New tab", symbols: [{ s: "", d: "" }] }])
+            onChange([
+              ...tabs,
+              { title: "New tab", symbols: [{ s: "", d: "" }] },
+            ])
           }
           type="button"
         >
@@ -421,7 +429,7 @@ function MarketDataEditor({
       <FieldDescription>
         Use TradingView symbols like FOREXCOM:SPXUSD or COMEX:GC1!.
       </FieldDescription>
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-4 xl:grid-cols-2">
         {groups.map((group, groupIndex) => (
           <EditableGroup
             canRemove={groups.length > 1}
@@ -451,7 +459,10 @@ function MarketDataEditor({
             />
           </EditableGroup>
         ))}
+      </div>
+      <div className="flex">
         <Button
+          className="w-full"
           onClick={() =>
             onChange([
               ...groups,
@@ -545,11 +556,11 @@ function SymbolRows<T extends Record<string, string>>({
                   ...symbol,
                   [symbolKey]: event.target.value,
                 }
-              onChange(nextSymbols)
-            }}
-            placeholder="NASDAQ:AAPL"
-            value={symbol[symbolKey]}
-          />
+                onChange(nextSymbols)
+              }}
+              placeholder="NASDAQ:AAPL"
+              value={symbol[symbolKey]}
+            />
           </Field>
           <Field>
             <FieldLabel>Display name</FieldLabel>
@@ -560,11 +571,11 @@ function SymbolRows<T extends Record<string, string>>({
                   ...symbol,
                   [displayKey]: event.target.value,
                 }
-              onChange(nextSymbols)
-            }}
-            placeholder="Apple"
-            value={symbol[displayKey]}
-          />
+                onChange(nextSymbols)
+              }}
+              placeholder="Apple"
+              value={symbol[displayKey]}
+            />
           </Field>
           <div className="flex items-end">
             <Button
@@ -581,11 +592,7 @@ function SymbolRows<T extends Record<string, string>>({
           </div>
         </div>
       ))}
-      <Button
-        onClick={() => onChange([...symbols, newSymbol])}
-        size="xs"
-        type="button"
-      >
+      <Button onClick={() => onChange([...symbols, newSymbol])} type="button">
         {addLabel}
       </Button>
       <FieldDescription>

@@ -29,18 +29,16 @@ export default async function SettingsPage() {
   ])
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="w-full max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-normal text-foreground">
-          Settings
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Manage your Candlestick account, alert delivery, and daily market
-          digest preferences.
-        </p>
-        <NotificationSettingsForm {...marketDigestSettings} />
-        <DashboardSettingsForm settings={dashboardSettings.dashboardSettings} />
-      </div>
+    <div className="flex flex-col">
+      <h1 className="text-3xl font-semibold tracking-normal text-foreground">
+        Settings
+      </h1>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        Manage your Candlestick account, alert delivery, and daily market digest
+        preferences.
+      </p>
+      <NotificationSettingsForm {...marketDigestSettings} />
+      <DashboardSettingsForm settings={dashboardSettings.dashboardSettings} />
     </div>
   )
 }
