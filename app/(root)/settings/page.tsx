@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { getDashboardSettings } from "@/actions/dashboard-settings"
 import { getMarketDigestSettings } from "@/actions/notifications"
 import { DashboardSettingsForm } from "@/components/dashboard-settings-form"
-import { SettingsForm } from "@/components/settings-form"
+import { NotificationSettingsForm } from "@/components/notification-settings-form"
 import { auth } from "@/lib/auth"
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default async function SettingsPage() {
           Manage your Candlestick account, alert delivery, and daily market
           digest preferences.
         </p>
-        <SettingsForm {...marketDigestSettings} />
+        <NotificationSettingsForm {...marketDigestSettings} />
         <DashboardSettingsForm settings={dashboardSettings.dashboardSettings} />
       </div>
     </div>

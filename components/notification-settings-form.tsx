@@ -33,19 +33,19 @@ import {
   marketDigestHourOptions,
 } from "@/lib/market-digest"
 
-type SettingsFormProps = {
+type NotificationSettingsFormProps = {
   accountEmail: string
   alertEmail: string
   country: string
   marketDigestHour: number
 }
 
-export function SettingsForm({
+export function NotificationSettingsForm({
   accountEmail,
   alertEmail,
   country,
   marketDigestHour,
-}: SettingsFormProps) {
+}: NotificationSettingsFormProps) {
   const router = useRouter()
   const [email, setEmail] = React.useState(alertEmail)
   const [selectedCountry, setSelectedCountry] = React.useState(country)
