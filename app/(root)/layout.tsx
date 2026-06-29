@@ -1,4 +1,4 @@
-import { DashboardSettingsBanner } from "@/components/dashboard-settings-banner"
+import { DashboardSettingsBanner } from "@/components/settings-banner"
 import { Header } from "@/components/header"
 
 export default function RootLayout({

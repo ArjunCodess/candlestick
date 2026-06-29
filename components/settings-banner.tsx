@@ -16,13 +16,14 @@ export async function DashboardSettingsBanner() {
 
   const [settings] = await db
     .select({
+      alertEmail: user.alertEmail,
       dashboardSettingsSavedAt: user.dashboardSettingsSavedAt,
     })
     .from(user)
     .where(eq(user.id, session.user.id))
     .limit(1)
 
-  if (settings?.dashboardSettingsSavedAt) {
+  if (settings?.alertEmail && settings.dashboardSettingsSavedAt) {
     return null
   }
 
@@ -30,12 +31,13 @@ export async function DashboardSettingsBanner() {
     <div className="border-b border-border bg-muted/40">
       <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-3 text-sm text-foreground md:flex-row md:items-center md:justify-between md:px-6 lg:px-8">
         <p className="text-muted-foreground">
-          Customize your dashboard to match the markets you follow.
+          Complete your notification and dashboard settings to get the full
+          Candlestick experience.
         </p>
         <Button
           size="xs"
           variant="outline"
-          render={<Link href="/settings#dashboard-settings" />}
+          render={<Link href="/settings" />}
           nativeButton={false}
         >
           Open settings
