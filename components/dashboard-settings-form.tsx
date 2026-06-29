@@ -3,7 +3,10 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
-import { updateDashboardSettings } from "@/actions/dashboard-settings"
+import {
+  resetDashboardSettings,
+  updateDashboardSettings,
+} from "@/actions/dashboard-settings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -83,14 +86,15 @@ export function DashboardSettingsForm({
   const router = useRouter()
   const [form, setForm] = React.useState(settings)
   const [saving, setSaving] = React.useState(false)
+  const [resetting, setResetting] = React.useState(false)
   const [saved, setSaved] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setSaving(true)
     setSaved(false)
     setError(null)
+    setSaving(true)
 
     try {
       await updateDashboardSettings(form)
@@ -100,6 +104,24 @@ export function DashboardSettingsForm({
       setError("Unable to save dashboard settings.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function onReset() {
+    setSaving(false)
+    setResetting(true)
+    setSaved(false)
+    setError(null)
+
+    try {
+      const defaults = await resetDashboardSettings()
+      setForm(defaults)
+      setSaved(true)
+      router.refresh()
+    } catch {
+      setError("Unable to reset dashboard settings.")
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -282,13 +304,23 @@ export function DashboardSettingsForm({
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="mt-6 justify-between border-t gap-3">
+        <CardFooter className="mt-6 flex-col items-stretch justify-between border-t gap-3 sm:flex-row sm:items-center">
           <p className="text-sm text-muted-foreground">
             {saved ? "Dashboard settings saved." : "Changes apply after save."}
           </p>
-          <Button disabled={saving} type="submit">
-            {saving ? "Saving settings" : "Save dashboard settings"}
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              disabled={saving || resetting}
+              onClick={onReset}
+              type="button"
+              variant="outline"
+            >
+              {resetting ? "Resetting settings" : "Reset to defaults"}
+            </Button>
+            <Button disabled={saving || resetting} type="submit">
+              {saving ? "Saving settings" : "Save dashboard settings"}
+            </Button>
+          </div>
         </CardFooter>
       </form>
     </Card>
@@ -459,7 +491,6 @@ function EditableGroup({
           <FieldLabel>{nameLabel}</FieldLabel>
           <Input
             onChange={(event) => onNameChange(event.target.value)}
-            required
             value={name}
           />
         </Field>
@@ -514,12 +545,11 @@ function SymbolRows<T extends Record<string, string>>({
                   ...symbol,
                   [symbolKey]: event.target.value,
                 }
-                onChange(nextSymbols)
-              }}
-              placeholder="NASDAQ:AAPL"
-              required
-              value={symbol[symbolKey]}
-            />
+              onChange(nextSymbols)
+            }}
+            placeholder="NASDAQ:AAPL"
+            value={symbol[symbolKey]}
+          />
           </Field>
           <Field>
             <FieldLabel>Display name</FieldLabel>
@@ -530,12 +560,11 @@ function SymbolRows<T extends Record<string, string>>({
                   ...symbol,
                   [displayKey]: event.target.value,
                 }
-                onChange(nextSymbols)
-              }}
-              placeholder="Apple"
-              required
-              value={symbol[displayKey]}
-            />
+              onChange(nextSymbols)
+            }}
+            placeholder="Apple"
+            value={symbol[displayKey]}
+          />
           </Field>
           <div className="flex items-end">
             <Button

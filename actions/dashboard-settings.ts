@@ -8,6 +8,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import {
   type DashboardSettings,
+  getDefaultDashboardSettings,
   normalizeDashboardSettings,
 } from "@/lib/dashboard-settings"
 import { db } from "@/lib/db"
@@ -57,4 +58,22 @@ export async function updateDashboardSettings(input: DashboardSettings) {
 
   revalidatePath("/dashboard")
   revalidatePath("/settings")
+}
+
+export async function resetDashboardSettings() {
+  const session = await getRequiredSession()
+  const dashboardSettings = getDefaultDashboardSettings()
+
+  await db
+    .update(user)
+    .set({
+      dashboardSettings,
+      dashboardSettingsSavedAt: new Date(),
+    })
+    .where(eq(user.id, session.user.id))
+
+  revalidatePath("/dashboard")
+  revalidatePath("/settings")
+
+  return dashboardSettings
 }
