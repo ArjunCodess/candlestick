@@ -15,3 +15,12 @@ search -> review the stock -> save it -> track it later.
 ## watchlists and alerts
 
 watchlists keep the stocks you care about close. alerts let you set a price target and get an email when the stock crosses it. daily digest emails help you stay updated.
+
+## image showcase
+
+| | |
+| --- | --- |
+| ![alert email](./public/alert-email.png)<br>alert email | ![alerts](./public/alerts.png)<br>alerts |
+| ![dashboard](./public/dashboard.png)<br>dashboard | ![search](./public/search.png)<br>search |
+| ![daily digest one](./public/digest1.png)<br>daily digest email | ![daily digest two](./public/digest2.png)<br>daily digest details |
+| ![watchlist](./public/watchlist.png)<br>watchlist |  |
